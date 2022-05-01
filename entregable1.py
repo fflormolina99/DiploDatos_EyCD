@@ -188,6 +188,10 @@ merged_sales_df.sample(5)
 Crear y guardar un nuevo conjunto de datos con todas las transformaciones realizadas anteriormente.
 """
 
+merged_sales_df.to_csv("melb_data_extended.csv", index=None)
+
+files.download('melb_data_extended.csv')
+
 """
  Ejercicios opcionales:
 

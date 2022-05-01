@@ -92,6 +92,96 @@ with engine.connect() as con:
 Pueden leer otras columnas del conjunto de AirBnB además de las que están en `interesting_cols`, si les parecen relevantes.
 """
 
+
+#se exploran las columnas del dataset de melborn
+melb_df.columns
+
+'''1)Se eligen las siguientes columnas del dataset de melborn, para la predicción del precio
+ello en razón de que son que más pueden impactar en el precio de una casa.
+Quizas la ubicación, como el barrio donde se ubican, la ciudad, la región, podrían ser otros
+datos que impacten en el precio, pero dado el desconocimiento que tenemos sobre la relevancia de la ubicación geográfica
+ya que no conocemos cuales son, las columnas elegidas serían las más objetivas para determinar el precio.'''
+
+colums_predict_price = ['Address','Rooms','Price','Bedroom2','Bathroom','Landsize']
+melb_df.loc[:,colums_predict_price]
+
+#se ven algunas métricas del dataset melborn
+melb_df['Price'].describe().apply(lambda s: '{0:.2f}'.format(s))
+
+seaborn.histplot(melb_df.Price.dropna())
+
+min_price = melb_df.Price.quantile(0.05)
+max_price = melb_df.Price.quantile(0.95)
+
+melb_df_filtered = melb_df[(melb_df['Price'] > min_price) & (melb_df['Price'] < max_price)]
+
+fig, axes = plt.subplots(nrows=2, figsize=(16, 8))
+seaborn.histplot(melb_df['Price'], bins=100, ax=axes[0], color='gray')
+axes[0].axvline(melb_df['Price'].mean(), color='orangered',
+            linestyle='--', label='Media')
+axes[0].axvline(melb_df['Price'].median(), color='indigo',
+            linestyle='-.', label='Mediana')
+
+#filtered_df = melb_df[(melb_df['Price']< 85000)]# & (melb_df['Price']> 85000)]
+seaborn.histplot(melb_df_filtered['Price'], bins=100, ax=axes[1], color='gray')
+axes[1].axvline(melb_df_filtered['Price'].mean(), color='orangered',
+            linestyle='--', label='Media')
+axes[1].axvline(melb_df_filtered['Price'].median(), color='indigo',
+            linestyle='-.', label='Mediana')
+
+axes[0].legend()
+seaborn.despine()
+
+airbnb_df_all = pandas.read_csv(
+    'https://cs.famaf.unc.edu.ar/~mteruel/datasets/diplodatos/cleansed_listings_dec18.csv')
+
+airbnb_df_all.columns
+
+airbnb_df_all['zipcode'] = pandas.to_numeric(airbnb_df_all.zipcode, errors='coerce')
+
+airbnb_df_all['airbnb_zipcode_counter'] = airbnb_df_all.zipcode.value_counts()
+
+airbnb_df_all.loc[:3,['accommodates',
+       'bathrooms', 'bedrooms', 'beds']]
+
+"""2.1)Se determinan las variables a agregar y las combinaciones"""
+
+# Pass as argument name the new name of the column, and as value a tuple where
+# the first value is the original column and the second value is the operation.
+relevant_cols = ['price', 'weekly_price', 'monthly_price','security_deposit','review_scores_rating','review_scores_location','zipcode']
+
+airbnb_price_by_zipcode = airbnb_df_all[relevant_cols].groupby('zipcode')\
+   .agg(airbnb_price_mean=('price', 'mean'),
+        airbnb_price_median=('price', 'median'),
+        airbnb_price_min=('price', 'min'),
+        airbnb_price_max=('price', 'max'),
+        airbnb_weekly_price_mean=('weekly_price', 'mean'),
+        airbnb_monthly_price_mean=('monthly_price', 'mean'),
+        airbnb_security_deposit_mean=('security_deposit', 'mean'),
+        airbnb_review_scores_rating_mean=('review_scores_rating', 'mean'),
+        airbnb_review_scores_location_mean=('review_scores_location', 'mean'))\
+   .reset_index()
+
+airbnb_price_by_zipcode[:3]
+
+airbnb_df_all.zipcode.value_counts()
+
+reg_mayor_50 = airbnb_df_all[airbnb_df_all['airbnb_zipcode_counter'] >= 25]
+zipcode_reg = reg_mayor_50['zipcode']
+airbnb_price_by_zipcode_filtered = airbnb_price_by_zipcode[airbnb_price_by_zipcode['zipcode'].isin(zipcode_reg)]
+len(airbnb_price_by_zipcode_filtered)
+#zipcode_reg[:3]
+
+"""2.2)Se usa la variable zipcode para unir el conjunto de datos"""
+
+merged_sales_df = melb_df_filtered.merge(
+    airbnb_price_by_zipcode_filtered, how='left',
+    left_on='Postcode', right_on='zipcode'
+)
+merged_sales_df.sample(5)
+
+# 2.3) [PENDIENTE]
+
 """
  Ejercicio 3:
   

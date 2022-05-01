@@ -1,3 +1,22 @@
+import matplotlib.pyplot as plt
+import numpy
+import pandas
+import seaborn
+seaborn.set_context('talk')
+
+#from decouple import config
+from sqlalchemy import create_engine, text
+from google.colab import files
+import io
+
+import plotly
+plotly.__version__
+# Make sure it's 4.14.3
+
+melb_df = pandas.read_csv(
+    'https://cs.famaf.unc.edu.ar/~mteruel/datasets/diplodatos/melb_data.csv')
+melb_df[:3]
+
 """
  Ejercicio 1 SQL: 
 
@@ -13,6 +32,51 @@ https://docs.sqlalchemy.org/en/14/core/engines.html#sqlite
 
 4. Combinar los datasets de ambas tablas ingestadas utilizando el comando JOIN de SQL  para obtener un resultado similar a lo realizado con Pandas en clase.  
 """
+
+# 1) Creamos la base de datos
+engine = create_engine('sqlite:///melb_housing_data.sqlite3', echo=True)
+
+# 2) Se ingresan los datos de melbourn a la base de datos
+melb_df.to_sql('mlb_data', con=engine, if_exists="replace")
+
+# Se sube el csv de los datos de aribnb
+uploaded = files.upload()
+
+file_key = 'airbnb_price_by_zipcode.csv'  # Replace for correspoing key
+airbnb_df = pandas.read_csv(io.StringIO(uploaded[file_key].decode('utf-8')))
+
+airbnb_df[:3]
+
+#2) Se ingresan los datos de arbnb a la base de datos
+airbnb_df.to_sql('airbnb_data', con=engine, if_exists="replace")
+
+#3) Cantidad de registros totales por ciudad.
+query1="SELECT Postcode, COUNT(*) FROM mlb_data GROUP BY Postcode"
+
+# Cantidad de registros totales por barrio y ciudad.
+query2="SELECT Postcode, Suburb, COUNT(*) FROM mlb_data GROUP BY Postcode, Suburb"
+
+queries = [query1, query2]
+
+with engine.connect() as con:
+    for query in queries:
+      rs = con.execute(query)
+      print(query)
+      for row in rs:
+          print(row)
+
+      print('\n\n')
+
+#4) Combinar los datasets de ambas tablas ingestadas utilizando el comando JOIN de SQL para 
+# Obtener un resultado similar a lo realizado con Pandas en clase.
+query3 = "SELECT * FROM mlb_data LEFT JOIN airbnb_data ON mlb_data.Postcode=airbnb_data.zipcode LIMIT 10"
+
+with engine.connect() as con:
+  rs = con.execute(query3)
+  print(query3)
+  for row in rs:
+    print(row)
+
 
 """
  Ejercicio 2: 

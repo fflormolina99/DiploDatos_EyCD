@@ -51,31 +51,51 @@ airbnb_df[:3]
 airbnb_df.to_sql('airbnb_data', con=engine, if_exists="replace")
 
 #3) Cantidad de registros totales por ciudad.
-query1="SELECT Postcode, COUNT(*) FROM mlb_data GROUP BY Postcode"
+query = "SELECT CouncilArea,count(*) as Count FROM melb GROUP BY CouncilArea"
+
+df = pandas.read_sql_query(
+    sql = query,
+    con = engine
+)
+
+df
 
 # Cantidad de registros totales por barrio y ciudad.
-query2="SELECT Postcode, Suburb, COUNT(*) FROM mlb_data GROUP BY Postcode, Suburb"
+query = "SELECT CouncilArea, Suburb ,count(1) Count FROM melb GROUP BY CouncilArea, Suburb"
 
-queries = [query1, query2]
+df = pandas.read_sql_query(
+    sql = query,
+    con = engine
+)
 
-with engine.connect() as con:
-    for query in queries:
-      rs = con.execute(query)
-      print(query)
-      for row in rs:
-          print(row)
-
-      print('\n\n')
+df
 
 #4) Combinar los datasets de ambas tablas ingestadas utilizando el comando JOIN de SQL para 
 # Obtener un resultado similar a lo realizado con Pandas en clase.
-query3 = "SELECT * FROM mlb_data LEFT JOIN airbnb_data ON mlb_data.Postcode=airbnb_data.zipcode LIMIT 10"
+query = """
+SELECT melb_avg.PostCode postcode, melb_avg.Price melb_price, airbnb_avg.Price airbnb_day_rent_price
+FROM (
+    SELECT CAST(Postcode as INT) PostCode, CAST(avg(price) as INT) Price, count(1) Count_mlb 
+    FROM melb 
+    GROUP BY Postcode) as melb_avg
+    
+    INNER JOIN
 
-with engine.connect() as con:
-  rs = con.execute(query3)
-  print(query3)
-  for row in rs:
-    print(row)
+    (SELECT airbnb_1.zipcode, CAST(avg(airbnb_1.price) as INT) Price , count(1) Count_airbnb 
+    FROM (
+        SELECT CAST(zipcode as INT) zipcode, CAST(price as INT) Price 
+        FROM airbnb) as airbnb_1
+    GROUP BY airbnb_1.zipcode) as airbnb_avg
+
+    ON melb_avg.PostCode = airbnb_avg.zipcode
+"""
+
+df = pandas.read_sql_query(
+    sql = query,
+    con = engine
+)
+
+df[:20]
 
 
 """

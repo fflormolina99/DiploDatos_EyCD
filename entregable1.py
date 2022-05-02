@@ -84,7 +84,7 @@ FROM (
     (SELECT airbnb_1.zipcode, CAST(avg(airbnb_1.price) as INT) Price , count(1) Count_airbnb 
     FROM (
         SELECT CAST(zipcode as INT) zipcode, CAST(price as INT) Price 
-        FROM airbnb) as airbnb_1
+        FROM airbnb_data) as airbnb_1
     GROUP BY airbnb_1.zipcode) as airbnb_avg
 
     ON melb_avg.PostCode = airbnb_avg.zipcode

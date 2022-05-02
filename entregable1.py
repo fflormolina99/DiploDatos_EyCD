@@ -51,7 +51,7 @@ airbnb_df[:3]
 airbnb_df.to_sql('airbnb_data', con=engine, if_exists="replace")
 
 #3) Cantidad de registros totales por ciudad.
-query = "SELECT CouncilArea,count(*) as Count FROM melb GROUP BY CouncilArea"
+query = "SELECT CouncilArea,count(*) as Count FROM mlb_data GROUP BY CouncilArea"
 
 df = pandas.read_sql_query(
     sql = query,
@@ -61,7 +61,7 @@ df = pandas.read_sql_query(
 df
 
 # Cantidad de registros totales por barrio y ciudad.
-query = "SELECT CouncilArea, Suburb ,count(1) Count FROM melb GROUP BY CouncilArea, Suburb"
+query = "SELECT CouncilArea, Suburb ,count(1) Count FROM mlb_data GROUP BY CouncilArea, Suburb"
 
 df = pandas.read_sql_query(
     sql = query,

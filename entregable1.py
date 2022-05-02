@@ -61,7 +61,7 @@ df = pandas.read_sql_query(
 df
 
 # Cantidad de registros totales por barrio y ciudad.
-query = "SELECT CouncilArea, Suburb ,count(1) Count FROM mlb_data GROUP BY CouncilArea, Suburb"
+query = "SELECT CouncilArea, Suburb ,count(1) as Count FROM mlb_data GROUP BY CouncilArea, Suburb"
 
 df = pandas.read_sql_query(
     sql = query,

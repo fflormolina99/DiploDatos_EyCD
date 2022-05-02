@@ -76,7 +76,7 @@ query = """
 SELECT melb_avg.PostCode postcode, melb_avg.Price melb_price, airbnb_avg.Price airbnb_day_rent_price
 FROM (
     SELECT CAST(Postcode as INT) PostCode, CAST(avg(price) as INT) Price, count(1) Count_mlb 
-    FROM melb 
+    FROM mlb_data 
     GROUP BY Postcode) as melb_avg
     
     INNER JOIN

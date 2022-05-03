@@ -97,12 +97,12 @@ Pueden leer otras columnas del conjunto de AirBnB además de las que están en `
 melb_df.columns
 
 '''1)Se eligen las siguientes columnas del dataset de melborn, para la predicción del precio
-ello en razón de que son que más pueden impactar en el precio de una casa.
-Quizas la ubicación, como el barrio donde se ubican, la ciudad, la región, podrían ser otros
-datos que impacten en el precio, pero dado el desconocimiento que tenemos sobre la relevancia de la ubicación geográfica
-ya que no conocemos cuales son, las columnas elegidas serían las más objetivas para determinar el precio.'''
+ello en razón de que son las que más pueden impactar en el precio de una casa.
+Quizas la ubicación, como el barrio, la ciudad, la región, podrían ser otros
+datos que impacten en el precio. Pero dado el desconocimiento que tenemos sobre la relevancia de la ubicación geográfica,
+ las columnas elegidas serían las siguientes para determinar el precio.'''
 
-colums_predict_price = ['Address','Rooms','Price','Bedroom2','Bathroom','Landsize']
+colums_predict_price = ['Address','Rooms','Price','Bedroom2','Bathroom','Landsize','Car']
 melb_df.loc[:,colums_predict_price]
 
 #se ven algunas métricas del dataset melborn

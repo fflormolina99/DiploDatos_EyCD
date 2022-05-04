@@ -208,13 +208,16 @@ merged_sales_df = melb_df_filtered.merge(
 )
 merged_sales_df.sample(5)
 
-# 2.3) [PENDIENTE]
+# 2.3)
 """
-Otras variables (o campos) de los datasets analizados, que podrían ser consideradas a los fines de poder combinar los datos serian el campo city del dataset de airbnb y el campo CouncilArea del dataset de Melbourn.
+En cuanto a otras variables (o campos) de los datasets analizados, que podrían ser consideradas a los fines de poder combinar los datos, podrían ser considereadas las siguientes:
+
+1)El campo city del dataset de airbnb y el campo CouncilArea del dataset de Melbourn:
 La factibilidad de poder utilizar estos campos la pudimos constatar al analizar algunos datos, y verificar que en ambas columnas hay información coincidente en cuanto a nombres de regiones o áreas administrativas, en las que se dividen las ciudades de Australia (algo similar a comunas o partidos). 
 En consecuencia, el uso de estas variables permitiría generar otro tipo de combinaciones, que permitan obtener información que ayude a predecir los precios tomando como base el espacio administrativo en donde se radican las casas. 
 """
 """""
+2)Los campos latitud y longitud presente en ambos datasets:
 Asumiendo que se cuenta con un algoritmo que permite encontrar las distintas ubicaciones más cercanas a una propiedad a partir de sus coordenadas geográficas. Se toman las variables latitud y longitud presente en ambos datasets.
 
 Latitud: Es la distancia en grados, minutos y segundos que hay con respecto al paralelo principal, que es el ecuador (0º). La latitud puede ser norte y sur. Longitud: Es la distancia en grados, minutos y segundos que hay con respecto al meridiano principal, que es el meridiano de Greenwich (0º).

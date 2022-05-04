@@ -210,10 +210,43 @@ merged_sales_df.sample(5)
 
 # 2.3) [PENDIENTE]
 """
-Otras variables (o campos) de los datasets analizados, que podrían ser concideradas a los fines de poder combinar los datos serian el campo city del dataset de airbnb y el campo CouncilArea del dataset de Melborn.
-La factibilidad de poder utilizar estos campos la pudimos constatar al analizar algunos datos, y verificar que en ambas columnas hay información coincidente en cuanto a nombres de regiones o áreas administrativas, en las que se dividen las ciudades de Australia (algo similar a comunas o partidos). En consecuencia, el uso de estas variables permitiría generar otro tipo de combnaciones, que permitan obtener información que ayude a predecir los precios tomando como base el espacio administrtivo en donde se radican las casas. 
+Otras variables (o campos) de los datasets analizados, que podrían ser consideradas a los fines de poder combinar los datos serian el campo city del dataset de airbnb y el campo CouncilArea del dataset de Melbourn.
+La factibilidad de poder utilizar estos campos la pudimos constatar al analizar algunos datos, y verificar que en ambas columnas hay información coincidente en cuanto a nombres de regiones o áreas administrativas, en las que se dividen las ciudades de Australia (algo similar a comunas o partidos). 
+En consecuencia, el uso de estas variables permitiría generar otro tipo de combinaciones, que permitan obtener información que ayude a predecir los precios tomando como base el espacio administrativo en donde se radican las casas. 
 """
+"""""
+Asumiendo que se cuenta con un algoritmo que permite encontrar las distintas ubicaciones más cercanas a una propiedad a partir de sus coordenadas geográficas. Se toman las variables latitud y longitud presente en ambos datasets.
 
+Latitud: Es la distancia en grados, minutos y segundos que hay con respecto al paralelo principal, que es el ecuador (0º). La latitud puede ser norte y sur. Longitud: Es la distancia en grados, minutos y segundos que hay con respecto al meridiano principal, que es el meridiano de Greenwich (0º).
+
+Para el dataset de Melbourne serían las columnas Lattitude y Longtitude y para el de Airbnb las columnas latitude y longitude.
+"""
+"""
+Para verificar que las áreas representadas por ambos datasets son consistentes en su ubicación geográfica, por medio de las variables seleccionadas(latitud y logitud), se realiza la siguiente exploración visual.
+"""
+import plotly.express as px
+data = melb_df.sample(300)
+fig = px.scatter_geo(
+    data, lat=data.Lattitude, lon=data.Longtitude, color=data.YearBuilt
+    )
+fig.update_geos(fitbounds="locations")
+fig.show()
+
+#para airbnb
+import plotly.express as px
+color_col = 'city'
+data = airbnb_df_all[~airbnb_df_all[color_col].isna()].sample(300)
+fig = px.scatter_geo(
+    data, lat=data.latitude, lon=data.longitude, color=data[color_col]
+    )
+fig.update_geos(fitbounds="locations")
+fig.show()
+"""
+Se puede observar que se tratan de zonas similares. Por lo tanto luego de un trabajo de curación sobre las columnas seleccionadas de ambos 
+datasets y con la ayuda del algoritmo de geolocalización y cálculo de distancias se puede llevar a cabo una combinación de información que 
+permita tener mejores herramientas para la estimación de los precios de las propiedades.
+
+"""
 """
  Ejercicio 3:
   

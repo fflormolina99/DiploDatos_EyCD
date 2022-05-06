@@ -2,19 +2,22 @@ import matplotlib.pyplot as plt
 import numpy
 import pandas
 import seaborn
-seaborn.set_context('talk')
 
-#from decouple import config
+seaborn.set_context("talk")
+
+# from decouple import config
 from sqlalchemy import create_engine, text
 from google.colab import files
 import io
 
 import plotly
+
 plotly.__version__
 # Make sure it's 4.14.3
 
 melb_df = pandas.read_csv(
-    'https://cs.famaf.unc.edu.ar/~mteruel/datasets/diplodatos/melb_data.csv')
+    "https://cs.famaf.unc.edu.ar/~mteruel/datasets/diplodatos/melb_data.csv"
+)
 melb_df[:3]
 
 """
@@ -34,50 +37,43 @@ https://docs.sqlalchemy.org/en/14/core/engines.html#sqlite
 """
 
 # 1) Creamos la base de datos
-engine = create_engine('sqlite:///melb_housing_data.sqlite3', echo=True)
+engine = create_engine("sqlite:///melb_housing_data.sqlite3", echo=True)
 
 # 2) Se ingresan los datos de melbourn a la base de datos
-melb_df.to_sql('mlb_data', con=engine, if_exists="replace")
+melb_df.to_sql("mlb_data", con=engine, if_exists="replace")
 
 # Se sube el csv de los datos de aribnb
 uploaded = files.upload()
 
-file_key = 'airbnb_price_by_zipcode.csv'  # Replace for correspoing key
-airbnb_df = pandas.read_csv(io.StringIO(uploaded[file_key].decode('utf-8')))
+file_key = "airbnb_price_by_zipcode.csv"  # Replace for correspoing key
+airbnb_df = pandas.read_csv(io.StringIO(uploaded[file_key].decode("utf-8")))
 
 airbnb_df[:3]
 
-#2) Se ingresan los datos de arbnb a la base de datos
-airbnb_df.to_sql('airbnb_data', con=engine, if_exists="replace")
+# 2) Se ingresan los datos de arbnb a la base de datos
+airbnb_df.to_sql("airbnb_data", con=engine, if_exists="replace")
 
-#3) Cantidad de registros totales por ciudad.
+# 3) Cantidad de registros totales por ciudad.
 query = "SELECT Postcode, COUNT(*) FROM mlb_data GROUP BY Postcode"
 
-df = pandas.read_sql_query(
-    sql = query,
-    con = engine
-)
+df = pandas.read_sql_query(sql=query, con=engine)
 
 df
 
 # Cantidad de registros totales por barrio y ciudad.
-query = "SELECT Postcode, Suburb ,count(1) as Count FROM mlb_data GROUP BY Postcode, Suburb"
-
-df = pandas.read_sql_query(
-    sql = query,
-    con = engine
+query = (
+    "SELECT Postcode, Suburb ,count(1) as Count FROM mlb_data GROUP BY Postcode, Suburb"
 )
+
+df = pandas.read_sql_query(sql=query, con=engine)
 
 df
 
-#4) Combinar los datasets de ambas tablas ingestadas utilizando el comando JOIN de SQL para 
+# 4) Combinar los datasets de ambas tablas ingestadas utilizando el comando JOIN de SQL para
 # Obtener un resultado similar a lo realizado con Pandas en clase.
 query = "SELECT * FROM mlb_data LEFT JOIN airbnb_data ON mlb_data.Postcode=airbnb_data.zipcode LIMIT 10"
 
-df = pandas.read_sql_query(
-    sql = query,
-    con = engine
-)
+df = pandas.read_sql_query(sql=query, con=engine)
 
 df[:20]
 
@@ -97,95 +93,163 @@ Pueden leer otras columnas del conjunto de AirBnB además de las que están en `
 """
 
 
-#se exploran las columnas del dataset de melborn
+# se exploran las columnas del dataset de melborn
 melb_df.columns
 
-'''1)Se eligen las siguientes columnas del dataset de melborn, para la predicción del precio
+"""1)Se eligen las siguientes columnas del dataset de melborn, para la predicción del precio
 ello en razón de que son las que más pueden impactar en el precio de una casa.
 Quizas la ubicación, como el barrio, la ciudad, la región, podrían ser otros
 datos que impacten en el precio. Pero dado el desconocimiento que tenemos sobre la relevancia de la ubicación geográfica,
- las columnas elegidas serían las siguientes para determinar el precio.'''
+ las columnas elegidas serían las siguientes para determinar el precio."""
 
-colums_predict_price = ['Address','Rooms','Price','Bedroom2','Bathroom','Landsize','Car']
-melb_df.loc[:,colums_predict_price]
+colums_predict_price = [
+    "Address",
+    "Rooms",
+    "Price",
+    "Bedroom2",
+    "Bathroom",
+    "Landsize",
+    "Car",
+]
+melb_df.loc[:, colums_predict_price]
 
-#se ven algunas métricas del dataset melborn
-melb_df['Price'].describe().apply(lambda s: '{0:.2f}'.format(s))
+# se ven algunas métricas del dataset melborn
+melb_df["Price"].describe().apply(lambda s: "{0:.2f}".format(s))
 
 seaborn.histplot(melb_df.Price.dropna())
 
 min_price = melb_df.Price.quantile(0.05)
 max_price = melb_df.Price.quantile(0.95)
 
-melb_df_filtered = melb_df[(melb_df['Price'] > min_price) & (melb_df['Price'] < max_price)]
+melb_df_filtered = melb_df[
+    (melb_df["Price"] > min_price) & (melb_df["Price"] < max_price)
+]
 
 fig, axes = plt.subplots(nrows=2, figsize=(16, 8))
-seaborn.histplot(melb_df['Price'], bins=100, ax=axes[0], color='gray')
-axes[0].axvline(melb_df['Price'].mean(), color='orangered',
-            linestyle='--', label='Media')
-axes[0].axvline(melb_df['Price'].median(), color='indigo',
-            linestyle='-.', label='Mediana')
+seaborn.histplot(melb_df["Price"], bins=100, ax=axes[0], color="gray")
+axes[0].axvline(
+    melb_df["Price"].mean(), color="orangered", linestyle="--", label="Media"
+)
+axes[0].axvline(
+    melb_df["Price"].median(), color="indigo", linestyle="-.", label="Mediana"
+)
 
-#filtered_df = melb_df[(melb_df['Price']< 85000)]# & (melb_df['Price']> 85000)]
-seaborn.histplot(melb_df_filtered['Price'], bins=100, ax=axes[1], color='gray')
-axes[1].axvline(melb_df_filtered['Price'].mean(), color='orangered',
-            linestyle='--', label='Media')
-axes[1].axvline(melb_df_filtered['Price'].median(), color='indigo',
-            linestyle='-.', label='Mediana')
+# filtered_df = melb_df[(melb_df['Price']< 85000)]# & (melb_df['Price']> 85000)]
+seaborn.histplot(melb_df_filtered["Price"], bins=100, ax=axes[1], color="gray")
+axes[1].axvline(
+    melb_df_filtered["Price"].mean(), color="orangered", linestyle="--", label="Media"
+)
+axes[1].axvline(
+    melb_df_filtered["Price"].median(), color="indigo", linestyle="-.", label="Mediana"
+)
 
 axes[0].legend()
 seaborn.despine()
 
 airbnb_df_all = pandas.read_csv(
-    'https://cs.famaf.unc.edu.ar/~mteruel/datasets/diplodatos/cleansed_listings_dec18.csv')
+    "https://cs.famaf.unc.edu.ar/~mteruel/datasets/diplodatos/cleansed_listings_dec18.csv"
+)
 
 airbnb_df_all.columns
 
-airbnb_df_all['zipcode'] = pandas.to_numeric(airbnb_df_all.zipcode, errors='coerce')
+airbnb_df_all["zipcode"] = pandas.to_numeric(airbnb_df_all.zipcode, errors="coerce")
 
-airbnb_df_all['airbnb_zipcode_counter'] = airbnb_df_all.zipcode.value_counts()
+airbnb_df_all["airbnb_zipcode_counter"] = airbnb_df_all.zipcode.value_counts()
 
-airbnb_df_all.loc[:3,['accommodates',
-       'bathrooms', 'bedrooms', 'beds']]
+airbnb_df_all.loc[:3, ["accommodates", "bathrooms", "bedrooms", "beds"]]
 
 """2.1)Se determinan las variables a agregar y las combinaciones"""
 
 # Pass as argument name the new name of the column, and as value a tuple where
 # the first value is the original column and the second value is the operation.
-relevant_cols = ['price', 'weekly_price', 'monthly_price','security_deposit','review_scores_rating','review_scores_location','zipcode']
+relevant_cols = [
+    "price",
+    "weekly_price",
+    "monthly_price",
+    "security_deposit",
+    "review_scores_rating",
+    "review_scores_location",
+    "zipcode",
+]
 
-airbnb_price_by_zipcode = airbnb_df_all[relevant_cols].groupby('zipcode')\
-   .agg(airbnb_price_mean=('price', 'mean'),
-        airbnb_price_median=('price', 'median'),
-        airbnb_price_min=('price', 'min'),
-        airbnb_price_max=('price', 'max'),
-        airbnb_weekly_price_mean=('weekly_price', 'mean'),
-        airbnb_monthly_price_mean=('monthly_price', 'mean'),
-        airbnb_security_deposit_mean=('security_deposit', 'mean'),
-        airbnb_review_scores_rating_mean=('review_scores_rating', 'mean'),
-        airbnb_review_scores_location_mean=('review_scores_location', 'mean'))\
-   .reset_index()
+airbnb_price_by_zipcode = (
+    airbnb_df_all[relevant_cols]
+    .groupby("zipcode")
+    .agg(
+        airbnb_price_mean=("price", "mean"),
+        airbnb_price_median=("price", "median"),
+        airbnb_price_min=("price", "min"),
+        airbnb_price_max=("price", "max"),
+        airbnb_weekly_price_mean=("weekly_price", "mean"),
+        airbnb_monthly_price_mean=("monthly_price", "mean"),
+        airbnb_security_deposit_mean=("security_deposit", "mean"),
+        airbnb_review_scores_rating_mean=("review_scores_rating", "mean"),
+        airbnb_review_scores_location_mean=("review_scores_location", "mean"),
+    )
+    .reset_index()
+)
 
 airbnb_price_by_zipcode[:3]
 
 airbnb_df_all.zipcode.value_counts()
 
-reg_mayor_50 = airbnb_df_all[airbnb_df_all['airbnb_zipcode_counter'] >= 25]
-zipcode_reg = reg_mayor_50['zipcode']
-airbnb_price_by_zipcode_filtered = airbnb_price_by_zipcode[airbnb_price_by_zipcode['zipcode'].isin(zipcode_reg)]
+reg_mayor_50 = airbnb_df_all[airbnb_df_all["airbnb_zipcode_counter"] >= 25]
+zipcode_reg = reg_mayor_50["zipcode"]
+airbnb_price_by_zipcode_filtered = airbnb_price_by_zipcode[
+    airbnb_price_by_zipcode["zipcode"].isin(zipcode_reg)
+]
 len(airbnb_price_by_zipcode_filtered)
-#zipcode_reg[:3]
+# zipcode_reg[:3]
 
 """2.2)Se usa la variable zipcode para unir el conjunto de datos"""
 
 merged_sales_df = melb_df_filtered.merge(
-    airbnb_price_by_zipcode_filtered, how='left',
-    left_on='Postcode', right_on='zipcode'
+    airbnb_price_by_zipcode_filtered, how="left", left_on="Postcode", right_on="zipcode"
 )
 merged_sales_df.sample(5)
 
-# 2.3) [PENDIENTE]
+# 2.3)
+"""
+En cuanto a otras variables (o campos) de los datasets analizados, que podrían ser consideradas a los fines de poder combinar los datos, podrían ser considereadas las siguientes:
 
+1)El campo city del dataset de airbnb y el campo CouncilArea del dataset de Melbourn:
+La factibilidad de poder utilizar estos campos la pudimos constatar al analizar algunos datos, y verificar que en ambas columnas hay información coincidente en cuanto a nombres de regiones o áreas administrativas, en las que se dividen las ciudades de Australia (algo similar a comunas o partidos). 
+En consecuencia, el uso de estas variables permitiría generar otro tipo de combinaciones, que permitan obtener información que ayude a predecir los precios tomando como base el espacio administrativo en donde se radican las casas. 
+"""
+"""""
+2)Los campos latitud y longitud presente en ambos datasets:
+Asumiendo que se cuenta con un algoritmo que permite encontrar las distintas ubicaciones más cercanas a una propiedad a partir de sus coordenadas geográficas. Se toman las variables latitud y longitud presente en ambos datasets.
+
+Latitud: Es la distancia en grados, minutos y segundos que hay con respecto al paralelo principal, que es el ecuador (0º). La latitud puede ser norte y sur. Longitud: Es la distancia en grados, minutos y segundos que hay con respecto al meridiano principal, que es el meridiano de Greenwich (0º).
+
+Para el dataset de Melbourne serían las columnas Lattitude y Longtitude y para el de Airbnb las columnas latitude y longitude.
+"""
+"""
+Para verificar que las áreas representadas por ambos datasets son consistentes en su ubicación geográfica, por medio de las variables seleccionadas(latitud y logitud), se realiza la siguiente exploración visual.
+"""
+import plotly.express as px
+data = melb_df.sample(300)
+fig = px.scatter_geo(
+    data, lat=data.Lattitude, lon=data.Longtitude, color=data.YearBuilt
+    )
+fig.update_geos(fitbounds="locations")
+fig.show()
+
+#para airbnb
+import plotly.express as px
+color_col = 'city'
+data = airbnb_df_all[~airbnb_df_all[color_col].isna()].sample(300)
+fig = px.scatter_geo(
+    data, lat=data.latitude, lon=data.longitude, color=data[color_col]
+    )
+fig.update_geos(fitbounds="locations")
+fig.show()
+"""
+Se puede observar que se tratan de zonas similares. Por lo tanto luego de un trabajo de curación sobre las columnas seleccionadas de ambos 
+datasets y con la ayuda del algoritmo de geolocalización y cálculo de distancias se puede llevar a cabo una combinación de información que 
+permita tener mejores herramientas para la estimación de los precios de las propiedades.
+
+"""
 """
  Ejercicio 3:
   
@@ -194,7 +258,7 @@ Crear y guardar un nuevo conjunto de datos con todas las transformaciones realiz
 
 merged_sales_df.to_csv("melb_data_extended.csv", index=None)
 
-files.download('melb_data_extended.csv')
+files.download("melb_data_extended.csv")
 
 """
  Ejercicios opcionales:

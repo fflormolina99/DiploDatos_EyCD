@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy
 import pandas
+from sklearn import preprocessing
 
 import seaborn
 seaborn.set_context('talk')
@@ -24,6 +25,33 @@ Algunas opciones:
 Recordar también que el atributo `pandas.DataFrame.values` permite acceder a la matriz de numpy subyacente a un DataFrame.
 """
 
+selected_columns = ['Suburb', 'Rooms', 'Type', 'Method',
+       'Postcode', 'Bedroom2', 'Bathroom', 'Car','Regionname']
+selected_melb_df = melb_df[selected_columns]
+
+
+selected_melb_df.nunique()
+
+
+selected_melb_df.isna().sum()
+# Se ve que el campo car tiene algúnos null, que se podrían considerar 0 supongo
+
+
+le = preprocessing.LabelEncoder()
+encoded_melb_df = selected_melb_df.apply(le.fit_transform)
+encoded_melb_df # df con los valores categóricos cambiados por numéricos
+
+
+enc = preprocessing.OneHotEncoder()
+enc.fit(encoded_melb_df)
+onehotlabels = enc.transform(encoded_melb_df).toarray()
+onehotlabels.shape # array con el onehotencoding aplicado
+
+
+# Lo convierto en un df y le agrego nombre a las columnas.
+onhot_df = pandas.DataFrame(onehotlabels)
+onhot_df.columns = enc.get_feature_names_out()
+onhot_df
 
 """
  Ejercicio 2: Imputación por KNN
